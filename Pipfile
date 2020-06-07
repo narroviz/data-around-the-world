@@ -4,12 +4,14 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [packages]
-rasterio = "*"
-pyproj = "*"
-numpy = "*"
-pandas = "*"
+haversine = "*"
 jupyter = "*"
 matplotlib = "*"
+numpy = "*"
+pandas = "*"
+pyproj = "*"
+rasterio = "*"
+scipy = "*"
 
 [requires]
 python_version = "3.7"
