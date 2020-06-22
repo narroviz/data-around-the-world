@@ -124,8 +124,6 @@ are_points_nearby <- function(p1, p2) {
   return(distHaversine(p1, p2) < IS_NEARBY_THRESHOLD)
 }
 
-are_points_nearby(c(-118.5057, 32.86574), c(-118.5057, 32.84453))
-
 merge_segments <- function(segment_df, longitude) {
   # Create a faux first row to ease rbind
   merged_df <- segment_df[1,]

@@ -13,6 +13,17 @@ Sys.setenv(
 countries <- readOGR("ne_10m_admin_0_countries", "ne_10m_admin_0_countries")
 maritime <- readOGR("World_EEZ_v11_20191118_LR", "eez_v11_lowres")
 
+# Setup retry when attempting output
+output_to_s3 <- function(json, index) {
+  possibleError <- tryCatch(
+    output_json_object_to_s3_by_index(json, index, local=TRUE),
+    error=function(e) e
+  )
+  if(inherits(possibleError, "error")) {
+    output_json_object_to_s3_by_index(json, index, local=TRUE)
+  }
+}
+
 # Parse arguments
 args <- commandArgs(TRUE)
 min_index <- 0   # args[1]
@@ -28,5 +39,5 @@ for(i in min_index:max_index) {
   intersections <- get_intersections_by_index(i, maritime, countries)
   elevation_distance <- get_elevation_distance_by_index(i)
   combined_json <- combine_json_files(intersections, elevation_distance)
-  output_json_object_to_s3_by_index(combined_json, i, local=TRUE)
+  output_to_s3(combined_json, i)
 }
