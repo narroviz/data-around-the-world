@@ -33,7 +33,7 @@ max_index <- 10800 # args[2]
 for(i in min_index:max_index) {
   # TODO: This index fails geometric clipping
   if (i == 7781) {
-    i == 7780
+    i = 7780
   }
   print(paste("Adding maritime/country intersection data for index: ", i, sep=""))
   intersections <- get_intersections_by_index(i, maritime, countries)
