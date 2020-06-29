@@ -1,1 +1,4 @@
 ETOPO1_Ice_g_geotiff.tif filter=lfs diff=lfs merge=lfs -text
+data/geojson/indigenousTerritories.json filter=lfs diff=lfs merge=lfs -text
+data/shapefiles/World_Seas_IHO_v1/ filter=lfs diff=lfs merge=lfs -text
+data/shapefiles/ne_10m_admin_0_countries/ filter=lfs diff=lfs merge=lfs -text
