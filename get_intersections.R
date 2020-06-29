@@ -59,6 +59,7 @@ get_shapefile_segments <- function(shp, names, territories, countries, types, lo
     name <- as.character(names[id_row_index])
     territory <- as.character(territories[id_row_index])
     country <- as.character(countries[id_row_index])
+
     # Convert codes to proper ISO3 (Natural Earth has strange, unexplained, other codes)
     if (country == "CH1") {
       country <- 'CHN'
@@ -173,16 +174,91 @@ merge_segments <- function(segment_df, longitude) {
 }
 
 get_intersection_segments <- function(longitude, longitude_end, water, land) {
-  clipped_water <- get_clipped_shp(water, longitude, longitude_end)
-  clipped_land <- get_clipped_shp(land, longitude, longitude_end)
+  water_segments = ""
+  land_segments = ""
 
+  clipped_water <- get_clipped_shp(water, longitude, longitude_end)
   water_segments <- get_shapefile_segments(clipped_water, water@data$TERRITORY1, water@data$ISO_TER1, water@data$ISO_SOV1, water@data$POL_TYPE, longitude)
+  
+  clipped_land <- get_clipped_shp(land, longitude, longitude_end)
   land_segments <- get_shapefile_segments(clipped_land, land@data$ADMIN, land@data$ISO_A3, land@data$SOV_A3, land@data$TYPE, longitude)
+  
   all <- rbind(water_segments, land_segments)
   filtered <- filter_segments(all)
   ordered <- filtered[order(filtered$start_latitude),]
   merged <- merge_segments(ordered, longitude)
   return(merged)
+}
+
+get_indigenous_intersection_segments <- function(longitude, longitude_end, indigenous) {
+  clipped_indigenous <- get_clipped_shp(indigenous, longitude, longitude_end)
+  if (is.null(clipped_indigenous)) {
+    return(NULL)
+  }
+  indigenous_segments <- get_shapefile_segments(clipped_indigenous, indigenous@data$Name, indigenous@data$description, indigenous@data$Slug, indigenous@data$color, longitude)
+  filtered <- filter_segments(indigenous_segments)
+  ordered <- filtered[order(filtered$start_latitude),]
+  merged <- merge_segments(ordered, longitude)
+  return(merged)
+}
+
+get_indigenous_intersections_by_index <- function(index, indigenous) {
+  lon = -180 + (index)*LONGITUDE_INCREMENT
+  lon_end = -180 + (index+1)*LONGITUDE_INCREMENT
+  lon_intersections <- get_indigenous_intersection_segments(lon, lon_end, indigenous)
+  
+  inv_lon = get_antipode_longitude(lon)
+  inv_lon_end = get_antipode_longitude(lon_end)
+  inv_intersections <- get_indigenous_intersection_segments(inv_lon, inv_lon_end, indigenous)
+  
+  empty = ""
+  
+  if (is.null(lon_intersections) & is.null(inv_intersections)) {
+    return(empty)
+  } else if (is.null(lon_intersections)) {
+    return(inv_intersections[order(inv_intersections$start_latitude, decreasing=TRUE),])
+  } else if (is.null(inv_intersections)) {
+    return(lon_intersections)
+  } else {
+    all_intersections <- rbind(lon_intersections, inv_intersections[order(inv_intersections$start_latitude, decreasing=TRUE),])
+    return(all_intersections)
+  }
+}
+
+
+get_ocean_intersection_segments <- function(longitude, longitude_end, ocean) {
+  clipped_ocean <- get_clipped_shp(ocean, longitude, longitude_end)
+  if (is.null(clipped_ocean)) {
+    return(NULL)
+  }
+  ocean_segments <- get_shapefile_segments(clipped_ocean, ocean@data$NAME, ocean@data$Gazetteer_, ocean@data$NAME, ocean@data$ID, longitude)
+  filtered <- filter_segments(ocean_segments)
+  ordered <- filtered[order(filtered$start_latitude),]
+  merged <- merge_segments(ordered, longitude)
+  return(merged)
+}
+
+get_ocean_intersections_by_index <- function(index, ocean) {
+  lon = -180 + (index)*LONGITUDE_INCREMENT
+  lon_end = -180 + (index+1)*LONGITUDE_INCREMENT
+  lon_intersections <- get_ocean_intersection_segments(lon, lon_end, ocean)
+  
+  inv_lon = get_antipode_longitude(lon)
+  inv_lon_end = get_antipode_longitude(lon_end)
+  inv_intersections <- get_ocean_intersection_segments(inv_lon, inv_lon_end, ocean)
+  
+  empty = ""
+  
+  if (is.null(lon_intersections) & is.null(inv_intersections)) {
+    return(empty)
+  } else if (is.null(lon_intersections)) {
+    return(inv_intersections[order(inv_intersections$start_latitude, decreasing=TRUE),])
+  } else if (is.null(inv_intersections)) {
+    return(lon_intersections)
+  } else {
+    all_intersections <- rbind(lon_intersections, inv_intersections[order(inv_intersections$start_latitude, decreasing=TRUE),])
+    return(all_intersections)
+  }
 }
 
 get_intersections_by_index <- function(index, water, land) {
@@ -205,11 +281,17 @@ get_elevation_distance_by_index <- function(index) {
   return(longitude_json)
 }
 
-combine_json_files <- function(all_intersections, longitude_json) {
-  countries_json <- toJSON(all_intersections)
+combine_json_files <- function(ocean_intersections, indigenous_intersections, intersections, longitude_json, use_existing_countries) {
+  if (use_existing_countries) {
+    countries_json <- toJSON(longitude_json$countries)
+  } else {
+    countries_json <- toJSON(intersections)
+  }
+  oceans_json <- toJSON(ocean_intersections)
+  indigenous_json <- toJSON(indigenous_intersections)
   distance_json <- toJSON(longitude_json$distance)
   elevation_json <- toJSON(longitude_json$elevation)
-  combined_json <- paste0('{"elevation":', elevation_json, ',"distance":', distance_json, ',"countries":', countries_json, '}')
+  combined_json <- paste0('{"elevation":', elevation_json, ',"distance":', distance_json, ',"indigenous":', indigenous_json, ',"oceans":', oceans_json, ',"countries":', countries_json, '}')
   return(combined_json)
 }
 
