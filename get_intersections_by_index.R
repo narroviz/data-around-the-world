@@ -78,10 +78,10 @@ for (i in 0:(length(oceans_reduced)-1)) {
 
 
 # Parse arguments
-args <- commandArgs(TRUE)2
+args <- commandArgs(TRUE)
 min_index <- 0   # args[1]
 max_index <- 10801 # args[2]
-use_existing_countries = TRUE
+use_existing_countries = FALSE
 
 # Add and output maritime/country intersection information into s3 JSON
 for(i in min_index:max_index) {

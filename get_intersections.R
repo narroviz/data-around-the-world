@@ -204,7 +204,11 @@ get_indigenous_intersection_segments <- function(longitude, longitude_end, indig
 
 get_indigenous_intersections_by_index <- function(index, indigenous) {
   lon = -180 + (index)*LONGITUDE_INCREMENT
-  lon_end = -180 + (index+1)*LONGITUDE_INCREMENT
+  if (index == 10800) {
+    lon_end = -0.00001
+  } else {
+    lon_end = -180 + (index+1)*LONGITUDE_INCREMENT
+  }
   lon_intersections <- get_indigenous_intersection_segments(lon, lon_end, indigenous)
   
   inv_lon = get_antipode_longitude(lon)
@@ -240,7 +244,11 @@ get_ocean_intersection_segments <- function(longitude, longitude_end, ocean) {
 
 get_ocean_intersections_by_index <- function(index, ocean) {
   lon = -180 + (index)*LONGITUDE_INCREMENT
-  lon_end = -180 + (index+1)*LONGITUDE_INCREMENT
+  if (index == 10800) {
+    lon_end = -0.00001
+  } else {
+    lon_end = -180 + (index+1)*LONGITUDE_INCREMENT
+  }
   lon_intersections <- get_ocean_intersection_segments(lon, lon_end, ocean)
   
   inv_lon = get_antipode_longitude(lon)
@@ -263,7 +271,11 @@ get_ocean_intersections_by_index <- function(index, ocean) {
 
 get_intersections_by_index <- function(index, water, land) {
   lon = -180 + (index)*LONGITUDE_INCREMENT
-  lon_end = -180 + (index+1)*LONGITUDE_INCREMENT
+  if (index == 10800) {
+    lon_end = -0.00001
+  } else {
+    lon_end = -180 + (index+1)*LONGITUDE_INCREMENT
+  }
   lon_intersections <- get_intersection_segments(lon, lon_end, water, land)
   
   inv_lon = get_antipode_longitude(lon)
